@@ -24,10 +24,16 @@ function initPage() {
     var page = new WebPage();
 
     page.onResourceRequested = function(requestData, networkRequest) {
-        var originalURL = requestData.url;
+        var originalURL = currentURL = requestData.url;
+
         if (originalURL.match(/^http:\/\/cdn\.loc\.gov/)) {
-            var newURL = originalURL.replace('http://cdn.loc.gov', 'https://cdn.loc.gov');
+            currentURL = originalURL.replace('^http://cdn.loc.gov', '^https://cdn.loc.gov');
+            console.log('🔸 ', requestData.url, 'rewrote insecure resource to:', currentURL);
             networkRequest.changeUrl(newURL);
+        }
+
+        if (currentURL.substr(0, 8) !== 'https://' && currentURL.substr(0, 5) !== 'data:') {
+            console.log('❗️ ', requestData.url, 'loaded an insecure resource:', originalURL);
         }
     };
 
@@ -42,6 +48,9 @@ function initPage() {
         if (msg == 'GOTO_NEXT_PAGE') {
             page.close();
             crawlNextPage();
+        } else if (msg.indexOf('insecure content from') >= 0) {
+            // We can format WebKit's native error messages nicely:
+            console.log('❕ ', msg.trim().replace('The page at ', ''));
         } else {
             console.log('\t💻', msg);
         }
@@ -58,14 +67,6 @@ function crawlNextPage() {
 
     var url = URLs.shift();
     var page = initPage();
-
-    page.onResourceReceived = function (response) {
-        if (response.stage == 'start') {
-            if (response.url.substr(0, 8) !== 'https://' && response.url.substr(0, 5) !== 'data:') {
-                console.log('❗️ ', url, 'loaded an insecure resource:', response.url);
-            }
-        }
-    };
 
     console.log('Opening', url, '(' + URLs.length + ' remaining)');
 

@@ -23,6 +23,14 @@ if (URLs.length < 1) {
 function initPage() {
     var page = new WebPage();
 
+    page.onResourceRequested = function(requestData, networkRequest) {
+        var originalURL = requestData.url;
+        if (originalURL.match(/^http:\/\/cdn\.loc\.gov/)) {
+            var newURL = originalURL.replace('http://cdn.loc.gov', 'https://cdn.loc.gov');
+            networkRequest.changeUrl(newURL);
+        }
+    };
+
     page.onError = function (msg, trace) {
         logError('🌋 Page error:', msg);
         trace.forEach(function(item) {

@@ -4,7 +4,7 @@ This is a simple script which loads HTTPS pages and reports any resources which 
 
 Note that it does not include a spider – you may use a tool like [LinkChecker](https://wummel.github.io/linkchecker/) to generate a big list or something like [extract-urls](https://github.com/acdha/unix_tools/blob/master/bin/extract-urls) to load a list from a page:
 
-    http loc.gov | extract-urls | grep -F .gov | cut -f1 -d"'" | perl -pe 's|(^(?:http://)?)|https://|' | sort -ifu | xargs ./report-mixed-content.js 
+    http loc.gov | extract-urls | grep -F .gov | cut -f1 -d"'" | grep -vE '/(images|js)/' | perl -pe 's|(^(?:http://)?)|https://|' | sort -ifu | xargs ./report-mixed-content.js
 
 ## Requirements
 

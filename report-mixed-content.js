@@ -15,24 +15,41 @@ args.slice(1).forEach(function(url) {
     }
 });
 
-if (URLs.length < 2) {
+if (URLs.length < 1) {
     console.log('Usage:', args[0], 'URL [URL2]');
     phantom.exit(1);
 }
 
-function crawlNext() {
-    var url;
+function initPage() {
+    var page = new WebPage();
 
-    if (URLs.length > 0) {
-        url = URLs.pop();
-    } else {
-        console.log('… done');
+    page.onError = function (msg, trace) {
+        logError('🌋 Page error:', msg);
+        trace.forEach(function(item) {
+            logError('  ', item.file, ':', item.line);
+        });
+    };
+
+    page.onConsoleMessage = function(msg) {
+        if (msg == 'GOTO_NEXT_PAGE') {
+            page.close();
+            crawlNextPage();
+        } else {
+            console.log('\t💻', msg);
+        }
+    };
+
+    return page;
+}
+
+function crawlNextPage() {
+    if (URLs.length < 1) {
+        console.log('… done!');
         phantom.exit();
     }
 
-    console.log('Crawling', url);
-
-    var page = webpage.create();
+    var url = URLs.shift();
+    var page = initPage();
 
     page.onResourceReceived = function (response) {
         if (response.stage == 'start') {
@@ -42,17 +59,37 @@ function crawlNext() {
         }
     };
 
-    page.open(url, function(status) {
+    console.log('Opening', url, '(' + URLs.length + ' remaining)');
+
+    page.onInitialized = function() {
+        page.evaluate(function(startTime) {
+            /* global window */
+
+            window.addEventListener('load', function() {
+                window.setTimeout(function () {
+                    console.log('GOTO_NEXT_PAGE');
+                }, 500);
+            });
+
+            window.setTimeout(function () {
+                console.log('👎 Aborting page load after one minute');
+                console.log('GOTO_NEXT_PAGE');
+            }, 60 * 1000);
+
+        }, Date.now());
+    };
+
+    page.open(url, function (status) {
         if (status === 'success') {
             console.log('✅ ', url);
+            // Do nothing at this point until the load event fires
         } else {
             console.log('❌ ', url);
+
+            page.close();
+            crawlNext();
         }
-
-        page.close();
-
-        crawlNext();
     });
 }
 
-crawlNext();
+crawlNextPage();

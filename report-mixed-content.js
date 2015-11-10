@@ -73,6 +73,12 @@ function crawlNextPage() {
         page.evaluate(function(startTime) {
             /* global window */
 
+            // This can happen with things like error pages which have no linked resources to load by the
+            // time that our JavaScript starts executing:
+            if (document.readyState == 'complete') {
+                console.log('GOTO_NEXT_PAGE');
+            }
+
             document.addEventListener('DOMContentLoaded', function() {
                 console.log('DOMContentLoaded', ((Date.now() - startTime) / 1000).toFixed(3) + 's');
             });

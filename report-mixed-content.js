@@ -73,7 +73,13 @@ function crawlNextPage() {
         page.evaluate(function(startTime) {
             /* global window */
 
+            document.addEventListener('DOMContentLoaded', function() {
+                console.log('DOMContentLoaded', ((Date.now() - startTime) / 1000).toFixed(3) + 's');
+            });
+
             window.addEventListener('load', function() {
+                console.log('load', ((Date.now() - startTime) / 1000).toFixed(3) + 's');
+
                 window.setTimeout(function () {
                     console.log('GOTO_NEXT_PAGE');
                 }, 500);

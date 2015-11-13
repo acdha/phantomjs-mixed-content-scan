@@ -27,14 +27,16 @@ function initPage() {
     page.onResourceRequested = function(requestData, networkRequest) {
         var originalURL = currentURL = requestData.url;
 
+        var currentPageURL = page.url || page.originalURL;
+
         if (originalURL.match(/^http:\/\/cdn\.loc\.gov/)) {
-            currentURL = originalURL.replace('^http://cdn.loc.gov', '^https://cdn.loc.gov');
-            console.log('🔸 ', requestData.url, 'rewrote insecure resource to:', currentURL);
+            currentURL = originalURL.replace('http://cdn.loc.gov', 'https://cdn.loc.gov');
+            console.log('🔸 ', currentPageURL, 'rewrote insecure CDN resource to:', currentURL);
             networkRequest.changeUrl(newURL);
         }
 
         if (currentURL.substr(0, 8) !== 'https://' && currentURL.substr(0, 5) !== 'data:') {
-            console.log('❗️ ', requestData.url, 'loaded an insecure resource:', originalURL);
+            console.log('❗️ ', currentPageURL, 'loaded an insecure resource:', originalURL);
         }
     };
 
@@ -100,6 +102,8 @@ function crawlNextPage() {
 
         }, Date.now());
     };
+
+    page.originalURL = url;
 
     page.open(url, function (status) {
         if (status === 'success') {

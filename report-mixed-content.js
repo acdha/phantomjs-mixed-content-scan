@@ -9,10 +9,11 @@ var args = system.args,
 
 args.slice(1).forEach(function(url) {
     if (url.substr(0, 8) !== 'https://') {
-        console.error('Skipping insecure URL:', url);
-    } else {
-        URLs.push(url);
+        console.debug('Rewriting HTTP URL to use HTTPS:', url);
+        url = url.replace('http:', 'https:');
     }
+
+    URLs.push(url);
 });
 
 if (URLs.length < 1) {
